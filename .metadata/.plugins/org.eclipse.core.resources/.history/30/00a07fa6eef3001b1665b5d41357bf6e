@@ -1,0 +1,215 @@
+package me.an.mp.menu;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+
+import me.an.mp.Monopoly;
+import me.an.mp.display.DesignManager;
+import me.an.mp.sound.Sound;
+import me.an.mp.sound.Sounds;
+import me.an.mp.util.UtilImage;
+
+public abstract class MenuButton
+{
+	private int x, y, width, height;
+	private BufferedImage image, origImage, mouseOverImg, clickedImg, disabledImg;
+	private Rectangle rect;
+	private boolean mouseOver = false, clicked = false, highlighOnly, disabled = false, visible = true;
+	private Color highlight;
+	private Sound clickSound, hoverSound;
+
+	public MenuButton(int x, int y, BufferedImage image, boolean highlightOnly)
+	{
+		this.x = x;
+		this.y = y;
+		this.image = image;
+		this.origImage = image;
+		this.mouseOverImg = UtilImage.darkenImage(origImage, false);
+		this.clickedImg = UtilImage.darkenImage(origImage, true);
+		this.disabledImg = UtilImage.changeOpacity(origImage, 0.5f);
+		this.width = image.getWidth();
+		this.height = image.getHeight();
+		this.rect = new Rectangle(x, y, width, height);
+		this.highlighOnly = highlightOnly;
+		this.clickSound = Sounds.BUTTON_CLICK;
+		this.hoverSound = Sounds.BUTTON_HOVER;
+	}
+
+	public MenuButton(int x, int y, BufferedImage image, boolean highlightOnly, Sound clickSound)
+	{
+		this(x, y, image, highlightOnly);
+		this.clickSound = clickSound;
+	}
+
+	public MenuButton(int x, int y, BufferedImage image, boolean highlightOnly, Sound clickSound, Sound hoverSound)
+	{
+		this(x, y, image, highlightOnly, clickSound);
+		this.hoverSound = hoverSound;
+	}
+
+	public MenuButton(BufferedImage image, double xPercent, double yPercent, boolean highlightOnly)
+	{
+		this.image = image;
+
+		if (xPercent == -1.0)
+			this.x = (Monopoly.WIDTH / 2) - (image.getWidth() / 2);
+		else
+			this.x = (int) (Monopoly.WIDTH * xPercent);
+
+		if (yPercent == -1.0)
+			this.y = (Monopoly.HEIGHT / 2) - (image.getHeight() / 2);
+		else
+			this.y = (int) (Monopoly.HEIGHT * yPercent);
+
+		this.origImage = image;
+		this.mouseOverImg = UtilImage.darkenImage(origImage, false);
+		this.clickedImg = UtilImage.darkenImage(origImage, true);
+		this.disabledImg = UtilImage.changeOpacity(origImage, 0.5f);
+		this.width = image.getWidth();
+		this.height = image.getHeight();
+		this.rect = new Rectangle(x, y, width, height);
+		this.highlighOnly = highlightOnly;
+		this.clickSound = Sounds.BUTTON_CLICK;
+		this.hoverSound = Sounds.BUTTON_HOVER;
+	}
+
+	public int getX()
+	{
+		return x;
+	}
+
+	public int getY()
+	{
+		return y;
+	}
+
+	public int getWidth()
+	{
+		return width;
+	}
+
+	public int getHeight()
+	{
+		return height;
+	}
+
+	public BufferedImage getImage()
+	{
+		return image;
+	}
+
+	public void setImage(BufferedImage image)
+	{
+		this.image = image;
+	}
+
+	public Rectangle getRectangle()
+	{
+		return rect;
+	}
+
+	public void setMouseOver(boolean mouseOver)
+	{
+		this.mouseOver = mouseOver;
+	}
+
+	public void onMouseOver(Graphics g)
+	{
+		g.setColor(DesignManager.HOVER_COLOR);
+		g.fillRect(x, y, width, height);
+	}
+
+	public void setClicked(boolean clicked)
+	{
+		this.clicked = clicked;
+	}
+
+	public void onClickOn(Graphics g)
+	{
+
+	}
+
+	public void setHighlight(Color color)
+	{
+		highlight = color;
+	}
+
+	public Sound getClickSound()
+	{
+		return clickSound;
+	}
+
+	public Sound getHoverSound()
+	{
+		return hoverSound;
+	}
+
+	public boolean isDisabled()
+	{
+		return disabled;
+	}
+
+	public void setDisabled(boolean disabled)
+	{
+		this.disabled = disabled;
+		if (disabled)
+			this.image = disabledImg;
+		else
+			this.image = origImage;
+	}
+
+	public boolean isVisible()
+	{
+		return visible;
+	}
+
+	public void setVisible(boolean visible)
+	{
+		this.visible = visible;
+	}
+
+	public void render(Graphics g)
+	{
+		if (!visible)
+			return;
+
+		g.drawImage(image, x, y, Monopoly.Instance);
+
+		if (disabled)
+			return;
+
+		if (mouseOver && !clicked && highlight == null)
+		{
+			if (highlighOnly)
+				image = mouseOverImg;
+			else
+				onMouseOver(g);
+		} else if (!mouseOver && highlight == null)
+		{
+			if (highlighOnly)
+				image = origImage;
+		}
+
+		if (clicked && highlight == null)
+		{
+			if (highlighOnly)
+				image = clickedImg;
+			else
+				onClickOn(g);
+		} else if (!clicked && !mouseOver && highlight == null)
+		{
+			if (highlighOnly)
+				image = origImage;
+		}
+
+		if (highlight != null)
+		{
+			g.setColor(highlight);
+			g.fillRect(x, y, width, height);
+		}
+	}
+
+	public abstract void onClick();
+}

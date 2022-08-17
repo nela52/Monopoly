@@ -1,0 +1,197 @@
+package me.an.mp;
+
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
+import me.an.mp.card.CardType;
+import me.an.mp.tile.CardTile;
+import me.an.mp.tile.ColorGroup;
+import me.an.mp.tile.RailroadTile;
+import me.an.mp.tile.Tile;
+import me.an.mp.tile.TileSide;
+import me.an.mp.tile.UtilityTile;
+import me.an.mp.tile.tiles.FreeParkingTile;
+import me.an.mp.tile.tiles.GoJailTile;
+import me.an.mp.tile.tiles.GoTile;
+import me.an.mp.tile.tiles.IncomeTaxTile;
+import me.an.mp.tile.tiles.JailTile;
+import me.an.mp.tile.tiles.LuxuryTaxTile;
+import me.an.mp.util.ImageUtil;
+import me.an.mp.util.SpriteSheet;
+
+public class Board
+{
+	public static SpriteSheet TileSheet = new SpriteSheet("TileSheet.png", Monopoly.TILE_WIDTH, Monopoly.TILE_HEIGHT);
+	public static SpriteSheet CornerTileSheet = new SpriteSheet("CornerTileSheet.png", Monopoly.TILE_HEIGHT, Monopoly.TILE_HEIGHT);
+	public static SpriteSheet ChanceTileSheet = new SpriteSheet("ChanceSheet.png", Monopoly.TILE_WIDTH, Monopoly.TILE_HEIGHT);
+
+	//Bottom tiles
+	public static Tile Go = new GoTile();
+	public static Tile Mediterranean = new Tile("Mediterranean Avenue", ColorGroup.PURPLE, 60, new int[] { 2, 10, 30, 90, 160, 250 }, 50, TileSide.BOTTOM, 9, TileSheet.getSprite(0, 0));
+	public static Tile ChestBottom = new CardTile(CardType.CHEST, TileSide.BOTTOM, 8, -1);
+	public static Tile Baltic = new Tile("Baltic Avenue", ColorGroup.PURPLE, 60, new int[] { 4, 20, 60, 180, 320, 450 }, 50, TileSide.BOTTOM, 7, TileSheet.getSprite(2, 0));
+	public static Tile IncomeTax = new IncomeTaxTile();
+	public static Tile ReadingRail = new RailroadTile("Reading Railroad", TileSide.BOTTOM, 5, TileSheet.getSprite(4, 0));
+	public static Tile Oriental = new Tile("Oriental Avenue", ColorGroup.LIGHT_BLUE, 100, new int[] { 6, 30, 90, 270, 400, 550 }, 50, TileSide.BOTTOM, 4, TileSheet.getSprite(5, 0));
+	public static Tile ChanceBottom = new CardTile(CardType.CHANCE, TileSide.BOTTOM, 3, 0);
+	public static Tile Vermont = new Tile("Vermont Avenue", ColorGroup.LIGHT_BLUE, 100, new int[] { 6, 30, 90, 270, 400, 550 }, 50, TileSide.BOTTOM, 2, TileSheet.getSprite(7, 0));
+	public static Tile Conneticut = new Tile("Conneticut", ColorGroup.LIGHT_BLUE, 120, new int[] { 8, 40, 100, 300, 450, 600 }, 50, TileSide.BOTTOM, 1, TileSheet.getSprite(8, 0));
+	public static Tile Jail = new JailTile();
+
+	//Left tiles
+	public static Tile StCharles = new Tile("St. Charles Place", ColorGroup.PINK, 140, new int[] { 10, 50, 150, 450, 625, 750 }, 100, TileSide.LEFT, 8, TileSheet.getSprite(9, 0));
+	public static Tile ElectricCompany = new UtilityTile("Electric Company", TileSide.LEFT, 7, TileSheet.getSprite(0, 1));
+	public static Tile States = new Tile("States Avenue", ColorGroup.PINK, 140, new int[] { 10, 50, 150, 450, 625, 750 }, 100, TileSide.LEFT, 6, TileSheet.getSprite(1, 1));
+	public static Tile Virginia = new Tile("Virginia Avenue", ColorGroup.PINK, 160, new int[] { 12, 60, 180, 500, 700, 900 }, 100, TileSide.LEFT, 5, TileSheet.getSprite(2, 1));
+	public static Tile PennsylvaniaRail = new RailroadTile("Pennsylvania Railroad", TileSide.LEFT, 4, TileSheet.getSprite(3, 1));
+	public static Tile StJames = new Tile("St. James Place", ColorGroup.ORANGE, 180, new int[] { 14, 70, 200, 550, 750, 950 }, 100, TileSide.LEFT, 3, TileSheet.getSprite(4, 1));
+	public static Tile ChestLeft = new CardTile(CardType.CHEST, TileSide.LEFT, 2, -1);
+	public static Tile Tennessee = new Tile("Tennessee Avenue", ColorGroup.ORANGE, 180, new int[] { 14, 70, 200, 550, 750, 950 }, 100, TileSide.LEFT, 1, TileSheet.getSprite(6, 1));
+	public static Tile NewYork = new Tile("New York Avenue", ColorGroup.ORANGE, 200, new int[] { 16, 80, 220, 600, 800, 1000 }, 100, TileSide.LEFT, 0, TileSheet.getSprite(7, 1));
+
+	//Top tiles
+	public static Tile FreeParking = new FreeParkingTile();
+	public static Tile Kentucky = new Tile("Kentucky Avenue", ColorGroup.RED, 220, new int[] { 18, 90, 250, 700, 875, 1050 }, 150, TileSide.TOP, 1, TileSheet.getSprite(8, 1));
+	public static Tile ChanceTop = new CardTile(CardType.CHANCE, TileSide.TOP, 2, 1);
+	public static Tile Indiana = new Tile("Indiana Avenue", ColorGroup.RED, 220, new int[] { 18, 90, 250, 700, 875, 1050 }, 150, TileSide.TOP, 3, TileSheet.getSprite(9, 1));
+	public static Tile Illinois = new Tile("Illinois Avenue", ColorGroup.RED, 240, new int[] { 20, 100, 300, 750, 925, 1100 }, 150, TileSide.TOP, 4, TileSheet.getSprite(0, 2));
+	public static Tile boRail = new RailroadTile("B. & O. Railroad", TileSide.TOP, 5, TileSheet.getSprite(1, 2));
+	public static Tile Atlantic = new Tile("Atlantic Avenue", ColorGroup.YELLOW, 260, new int[] { 22, 110, 330, 800, 975, 1150 }, 150, TileSide.TOP, 6, TileSheet.getSprite(2, 2));
+	public static Tile Ventnor = new Tile("Ventnor Avenue", ColorGroup.YELLOW, 260, new int[] { 22, 110, 330, 800, 975, 1150 }, 150, TileSide.TOP, 7, TileSheet.getSprite(3, 2));
+	public static Tile WaterWorks = new UtilityTile("Water Works", TileSide.TOP, 8, TileSheet.getSprite(4, 2));
+	public static Tile MarvinGardens = new Tile("Marvin Gardens", ColorGroup.YELLOW, 280, new int[] { 24, 120, 360, 850, 1025, 1200 }, 150, TileSide.TOP, 9, TileSheet.getSprite(5, 2));
+	public static Tile GoJail = new GoJailTile();
+
+	//Right tiles
+	public static Tile Pacific = new Tile("Pacific Avenue", ColorGroup.GREEN, 300, new int[] { 26, 130, 390, 900, 1100, 1275 }, 200, TileSide.RIGHT, 0, TileSheet.getSprite(6, 2));
+	public static Tile NorthCarolina = new Tile("North Carolina Avenue", ColorGroup.GREEN, 300, new int[] { 26, 130, 390, 900, 1100, 1275 }, 200, TileSide.RIGHT, 1, TileSheet.getSprite(7, 2));
+	public static Tile ChestRight = new CardTile(CardType.CHEST, TileSide.RIGHT, 2, -1);
+	public static Tile Pennsylvania = new Tile("Pennsylvania Avenue", ColorGroup.GREEN, 320, new int[] { 28, 150, 450, 1000, 1200, 1400 }, 200, TileSide.RIGHT, 3, TileSheet.getSprite(8, 2));
+	public static Tile ShortRail = new RailroadTile("Short Line", TileSide.RIGHT, 4, TileSheet.getSprite(9, 2));
+	public static Tile ChanceRight = new CardTile(CardType.CHANCE, TileSide.RIGHT, 5, 2);
+	public static Tile ParkPlace = new Tile("Park Place", ColorGroup.BLUE, 350, new int[] { 35, 175, 500, 1100, 1300, 1500 }, 200, TileSide.RIGHT, 6, TileSheet.getSprite(0, 3));
+	public static Tile LuxTax = new LuxuryTaxTile();
+	public static Tile Boardwalk = new Tile("Boardwalk", ColorGroup.BLUE, 400, new int[] { 50, 200, 600, 1400, 1700, 2000 }, 200, TileSide.RIGHT, 8, TileSheet.getSprite(2, 3));
+
+	public static BufferedImage Center = ImageUtil.loadImage("Center.png");
+
+	private List<Tile> tiles;
+
+	public Board()
+	{
+		tiles = new ArrayList<Tile>();
+
+		//Bottom tiles
+		tiles.add(Go);
+		tiles.add(Mediterranean);
+		tiles.add(ChestBottom);
+		tiles.add(Baltic);
+		tiles.add(IncomeTax);
+		tiles.add(ReadingRail);
+		tiles.add(Oriental);
+		tiles.add(ChanceBottom);
+		tiles.add(Vermont);
+		tiles.add(Conneticut);
+		tiles.add(Jail);
+
+		//Left tiles
+		tiles.add(StCharles);
+		tiles.add(ElectricCompany);
+		tiles.add(States);
+		tiles.add(Virginia);
+		tiles.add(PennsylvaniaRail);
+		tiles.add(StJames);
+		tiles.add(ChestLeft);
+		tiles.add(Tennessee);
+		tiles.add(NewYork);
+
+		//Top tiles
+		tiles.add(FreeParking);
+		tiles.add(Kentucky);
+		tiles.add(ChanceTop);
+		tiles.add(Indiana);
+		tiles.add(Illinois);
+		tiles.add(boRail);
+		tiles.add(Atlantic);
+		tiles.add(Ventnor);
+		tiles.add(WaterWorks);
+		tiles.add(MarvinGardens);
+		tiles.add(GoJail);
+
+		//Right tiles
+		tiles.add(Pacific);
+		tiles.add(NorthCarolina);
+		tiles.add(ChestRight);
+		tiles.add(Pennsylvania);
+		tiles.add(ShortRail);
+		tiles.add(ChanceRight);
+		tiles.add(ParkPlace);
+		tiles.add(LuxTax);
+		tiles.add(Boardwalk);
+
+		//Set next and previous for each tile. At end next is first tile and at start previous is last tile. 
+		for (int i = 0; i < tiles.size(); i++)
+		{
+			Tile tile = tiles.get(i);
+			if (i == 0)
+				tile.previous = tiles.get(tiles.size() - 1);
+			else
+				tile.previous = tiles.get(i - 1);
+
+			if (i == tiles.size() - 1)
+				tile.next = tiles.get(0);
+			else
+				tile.next = tiles.get(i + 1);
+		}
+	}
+
+	public void update()
+	{
+
+	}
+
+	public void render(Graphics g)
+	{
+		for (Tile tile : tiles)
+			tile.render(g);
+
+		g.drawImage(Center, Monopoly.TILE_HEIGHT + 3, Monopoly.TILE_HEIGHT + 3, Monopoly.Instance);
+	}
+
+	public List<Tile> getTiles()
+	{
+		return tiles;
+	}
+
+	public Tile getTile(String name)
+	{
+		for (Tile tile : tiles)
+		{
+			if (tile.getName().equalsIgnoreCase(name))
+				return tile;
+		}
+		return null;
+	}
+
+	public List<Player> getPlayersOnTile(Tile tile)
+	{
+		List<Player> players = new ArrayList<Player>();
+		for (Player player : Monopoly.Instance.getPlayers())
+		{
+			if (player.getCurrentTile() == tile)
+				players.add(player);
+		}
+		return players;
+	}
+	
+	public Tile getClosest(int x, int y)
+	{
+		Tile closest = null;
+		for(Tile tile : tiles)
+		{
+			
+		}
+	}
+}

@@ -1,0 +1,356 @@
+package me.an.mp.player;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.text.WordUtils;
+
+import me.an.mp.Board;
+import me.an.mp.Defaults;
+import me.an.mp.Monopoly;
+import me.an.mp.card.CardType;
+import me.an.mp.event.EventHandler;
+import me.an.mp.event.events.player.BalanceChangeEvent;
+import me.an.mp.event.events.player.NegativeBalanceEvent;
+import me.an.mp.event.events.tile.BoughtTileEvent;
+import me.an.mp.event.events.tile.LandOnTileEvent;
+import me.an.mp.tile.ColorGroup;
+import me.an.mp.tile.Tile;
+import me.an.mp.tile.TileSide;
+import me.an.mp.tile.tiles.FreeParkingTile;
+import me.an.mp.tile.tiles.GoTile;
+import me.an.mp.util.UtilMath;
+
+public class Player
+{
+	private Token token;
+	private BufferedImage image;
+	private PlayerColor color;
+	private int money;
+	private Tile currTile;
+	private int x, y;
+	private List<Tile> properties;
+	private boolean inJail = false;
+
+	private int moveStep = 10;
+
+	private Map<Tile, Boolean> moveTo = new HashMap<Tile, Boolean>();
+
+	public Player(Token token)
+	{
+		this.token = token;
+		this.image = token.getImage();
+		this.color = PlayerColor.random();
+		this.money = Defaults.START_BALANCE;
+		this.currTile = Board.Go;
+		this.properties = new ArrayList<Tile>();
+		x = getPlayerPos(currTile).x;
+		y = getPlayerPos(currTile).y;
+	}
+
+	public Token getToken()
+	{
+		return token;
+	}
+
+	public void setToken(Token token)
+	{
+		this.token = token;
+		this.image = token.getImage();
+	}
+
+	public PlayerColor getColor()
+	{
+		return color;
+	}
+
+	public Tile getCurrentTile()
+	{
+		return currTile;
+	}
+
+	public void setCurrentTile(Tile tile)
+	{
+		currTile = tile;
+	}
+
+	public int getMoney()
+	{
+		return money;
+	}
+
+	public void addMoney(int amount)
+	{
+		money += amount;
+		EventHandler.Instance.callEvent(new BalanceChangeEvent(this, amount));
+	}
+
+	public void subtractMoney(int amount)
+	{
+		int newBal = money - amount;
+		if (newBal < 0)
+			EventHandler.Instance.callEvent(new NegativeBalanceEvent(this, newBal));
+
+		money -= amount;
+		EventHandler.Instance.callEvent(new BalanceChangeEvent(this, -amount));
+	}
+
+	public boolean hasMoney(int amount)
+	{
+		return money >= amount;
+	}
+
+	public void giveMoney(int amount, Player player)
+	{
+		subtractMoney(amount);
+		player.addMoney(amount);
+	}
+
+	public List<Tile> getProperties()
+	{
+		return properties;
+	}
+
+	public List<Tile> getProperties(ColorGroup group)
+	{
+		List<Tile> groupProps = new ArrayList<Tile>();
+		for (Tile property : properties)
+		{
+			if (property.getColorGroup() == group)
+				groupProps.add(property);
+		}
+		return groupProps;
+	}
+
+	public Map<String, Color> getPropertiesOverview()
+	{
+		if (properties.size() == 0)
+			return null;
+
+		Map<ColorGroup, List<Tile>> propertyGroups = new HashMap<ColorGroup, List<Tile>>();
+		for (Tile property : properties)
+		{
+			ColorGroup group = property.getColorGroup();
+			if (!propertyGroups.containsKey(group))
+			{
+				List<Tile> props = new ArrayList<Tile>();
+				propertyGroups.put(group, props);
+			}
+
+			propertyGroups.get(group).add(property);
+		}
+
+		Map<String, Color> propertyText = new HashMap<String, Color>();
+		for (ColorGroup group : propertyGroups.keySet())
+		{
+			int numOwned = getProperties(group).size();
+			propertyText.put(numOwned + " " + WordUtils.capitalize(group.getName()) + (numOwned > 1 ? "s" : ""), group.getColor());
+		}
+
+		return propertyText;
+	}
+
+	public List<Tile> getPropertiesSorted()
+	{
+		List<Tile> propSorted = new ArrayList<Tile>();
+		for (ColorGroup group : ColorGroup.values())
+			propSorted.addAll(getProperties(group));
+		return propSorted;
+	}
+
+	public void buyTile(Tile tile)
+	{
+		subtractMoney(tile.getCost());
+		tile.setOwner(this);
+		properties.add(tile);
+		EventHandler.Instance.callEvent(new BoughtTileEvent(this, tile));
+	}
+
+	public void buyTile(Tile tile, int price)
+	{
+		subtractMoney(price);
+		tile.setOwner(this);
+		properties.add(tile);
+		EventHandler.Instance.callEvent(new BoughtTileEvent(this, tile));
+	}
+
+	public boolean ownsTile(Tile tile)
+	{
+		for (Tile other : properties)
+		{
+			if (other.getName().equals(tile.getName()))
+				return true;
+		}
+		return false;
+	}
+
+	public Point getPosition()
+	{
+		return new Point(x, y);
+	}
+
+	public void setPosition(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+
+	public Point getPlayerPos(Tile tile)
+	{
+		Point tilePos = tile.getPosition();
+		int xPos = tilePos.x + (tile.getImage().getWidth() / 2 - image.getWidth() / 2);
+		int yPos = tilePos.y + (tile.getImage().getHeight() / 2 - image.getHeight() / 2);
+		return new Point(xPos, yPos);
+	}
+
+	public Point getPosOnTile(Tile tile)
+	{
+		List<Player> tilePlayers = Monopoly.Instance.getBoard().getPlayersOnTile(tile);
+
+		Point pos = getPlayerPos(tile);
+		int xPos = pos.x, yPos = pos.y;
+
+		xPos -= (tilePlayers.indexOf(this) + 1) * token.getImage().getWidth();
+
+		int totalWidth = 0;
+		for (Player player : tilePlayers)
+			totalWidth += player.getToken().getImage().getWidth();
+
+		xPos += (tile.getImage().getWidth() / 2 + totalWidth / (tilePlayers.size() * 2));
+
+		return new Point(xPos, yPos);
+	}
+
+	public void reposition()
+	{
+		Point pos = getPosOnTile(currTile);
+		x = pos.x;
+		y = pos.y;
+	}
+
+	public void giveCard(CardType type)
+	{
+		//TODO implement
+	}
+
+	private int getMoveSpeed(Tile targetTile)
+	{
+		int numMoves = 0;
+
+		Tile currentTile = currTile != targetTile ? currTile : currTile.next;
+		for (; currentTile != targetTile; currentTile = currentTile.next)
+			numMoves++;
+
+		return UtilMath.scaleBetween(numMoves, Defaults.MOVE_SPEED_MIN, Defaults.MOVE_SPEED_MAX, 1, Monopoly.NUM_TILES - 1);
+	}
+
+	public void moveToTile(Tile tile)
+	{
+		moveStep = getMoveSpeed(tile);
+
+		if (tile instanceof GoTile && currTile instanceof GoTile)
+			moveTo.put(currTile.next, true); //Add whatever tile
+
+		moveTo.put(tile, false);
+	}
+
+	public void moveForward(int tiles)
+	{
+		Tile targetTile = currTile;
+		for (int i = 0; i < tiles; i++)
+			targetTile = targetTile.next;
+		moveToTile(targetTile);
+	}
+
+	public Tile getTileIn()
+	{
+		Tile tileIn = null;
+
+		for (Tile tile : Monopoly.Instance.getBoard().getTiles())
+		{
+			Rectangle tileRect = new Rectangle(tile.getPosition().x, tile.getPosition().y, tile.getImage().getWidth(), tile.getImage().getHeight());
+			if (tileRect.contains(x, y))
+			{
+				tileIn = tile;
+				break;
+			}
+		}
+
+		if (tileIn != null)
+			return tileIn;
+
+		return Monopoly.Instance.getBoard().getClosest(x, y);
+	}
+
+	public boolean isMoving()
+	{
+		return !moveTo.isEmpty();
+	}
+
+	public void update()
+	{
+		if (!moveTo.isEmpty())
+		{
+			Tile next = currTile.next;
+			Point nextPos = getPlayerPos(next);
+
+			if (next.getTileSide() == TileSide.BOTTOM && !(next instanceof GoTile))
+			{
+				if (x - moveStep < nextPos.x)
+					x = nextPos.x;
+				else
+					x -= moveStep;
+			} else if (next.getTileSide() == TileSide.LEFT || next instanceof FreeParkingTile)
+			{
+				if (y - moveStep < nextPos.y)
+					y = nextPos.y;
+				else
+					y -= moveStep;
+			} else if (next.getTileSide() == TileSide.TOP)
+			{
+				if (x + moveStep > nextPos.x)
+					x = nextPos.x;
+				else
+					x += moveStep;
+			} else if (next.getTileSide() == TileSide.RIGHT || next instanceof GoTile)
+			{
+				if (y + moveStep > nextPos.y)
+					y = nextPos.y;
+				else
+					y += moveStep;
+			}
+
+			if (x == nextPos.x && y == nextPos.y)
+			{
+				currTile = currTile.next;
+				if (currTile instanceof GoTile)
+					addMoney(200);
+			}
+
+			if (currTile == moveTo.keySet().toArray(new Tile[0])[0])
+			{
+				Tile tile = moveTo.keySet().toArray(new Tile[0])[0];
+
+				if (!moveTo.get(tile)) //Move isn't temporary 
+				{
+					tile.onLandOn(this);
+					EventHandler.Instance.callEvent(new LandOnTileEvent(this, tile));
+				}
+
+				moveTo.remove(tile);
+			}
+		}
+	}
+
+	public void render(Graphics g)
+	{
+		g.drawImage(image, x, y, Monopoly.Instance);
+	}
+}

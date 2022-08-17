@@ -1,0 +1,42 @@
+package me.an.mp;
+
+import me.an.mp.tile.Tile;
+
+public class MoveThread extends Thread
+{
+	private Player player;
+	private Tile to;
+
+	public MoveThread(Player player, Tile to)
+	{
+		this.player = player;
+		this.to = to;
+	}
+
+	public synchronized void start()
+	{
+		super.start();
+
+		while (player.getCurrentTile() != to)
+		{
+			Tile next = to.next;
+
+			int x = player.getPosition().x;
+			int y = player.getPosition().y;
+
+			while (x < next.getPosition().x)
+				x++;
+			
+			while(y < next.getPosition().y)
+				y++;
+
+			try
+			{
+				sleep(20);
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+}

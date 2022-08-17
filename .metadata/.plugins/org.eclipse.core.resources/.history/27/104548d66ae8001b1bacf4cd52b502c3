@@ -1,0 +1,496 @@
+package me.an.mp.menu;
+
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import me.an.mp.Monopoly;
+import me.an.mp.menu.menus.GameMenu;
+import me.an.mp.menu.menus.InfoMenu;
+import me.an.mp.util.UtilImage;
+
+public abstract class Menu implements MouseListener, MouseMotionListener, KeyListener
+{
+	public static BufferedImage DEFAULT_BACKGROUND = UtilImage.loadImage("MenuBackground.png");
+	public static BufferedImage CLOSE_BUTTON = UtilImage.loadImage("CloseButton.png");
+
+	private int x, y, width, height;
+	private BufferedImage image;
+	private Color color;
+
+	private List<MenuButton> buttons;
+	private List<MenuText> texts;
+	private List<MenuBar> bars;
+	private List<MenuBox> textBoxs;
+
+	private boolean open = false, done = false;
+
+	public Menu(int x, int y, int width, int height)
+	{
+		this.buttons = new ArrayList<MenuButton>();
+		this.texts = new ArrayList<MenuText>();
+		this.bars = new ArrayList<MenuBar>();
+		this.textBoxs = new ArrayList<MenuBox>();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+	}
+
+	public Menu(int x, int y, int width, int height, BufferedImage image)
+	{
+		this(x, y, width, height);
+		this.image = image;
+	}
+
+	public Menu(int x, int y, int width, int height, Color color)
+	{
+		this(x, y, width, height);
+		this.color = color;
+	}
+
+	public Menu(BufferedImage image, MenuPosition posX, MenuPosition posY)
+	{
+		this.buttons = new ArrayList<MenuButton>();
+		this.texts = new ArrayList<MenuText>();
+		this.bars = new ArrayList<MenuBar>();
+		this.textBoxs = new ArrayList<MenuBox>();
+		this.image = image;
+		this.width = image.getWidth();
+		this.height = image.getHeight();
+
+		switch (posX)
+		{
+		case CENTER:
+			x = (Monopoly.WIDTH / 2) - (image.getWidth() / 2);
+			break;
+		case LEFT:
+			x = image.getWidth();
+			break;
+		case RIGHT:
+			x = Monopoly.WIDTH - image.getWidth();
+			break;
+		}
+
+		switch (posY)
+		{
+		case CENTER:
+			y = (Monopoly.HEIGHT / 2) - (image.getHeight() / 2);
+			break;
+		case LEFT: //TOP
+			y = image.getHeight();
+			break;
+		case RIGHT: //Bottom
+			y = Monopoly.HEIGHT - image.getHeight();
+			break;
+		}
+	}
+
+	public void register(Canvas canvas)
+	{
+		canvas.addMouseListener(this);
+		canvas.addMouseMotionListener(this);
+		canvas.addKeyListener(this);
+	}
+
+	private void deregister()
+	{
+		Monopoly.Instance.removeMouseListener(this);
+		Monopoly.Instance.removeMouseMotionListener(this);
+		Monopoly.Instance.removeKeyListener(this);
+	}
+
+	public int getX()
+	{
+		return x;
+	}
+
+	public void setX(int x)
+	{
+		this.x = x;
+	}
+
+	public int getY()
+	{
+		return y;
+	}
+
+	public void setY(int y)
+	{
+		this.y = y;
+	}
+
+	public void setPosition(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+
+	public int getWidth()
+	{
+		return width;
+	}
+
+	public int getHeight()
+	{
+		return height;
+	}
+
+	public void setSize(int width, int height)
+	{
+		this.width = width;
+		this.height = height;
+	}
+
+	public BufferedImage getImage()
+	{
+		return image;
+	}
+
+	public Color getColor()
+	{
+		return color;
+	}
+
+	public List<MenuButton> getButtons()
+	{
+		return buttons;
+	}
+
+	public MenuButton addButton(MenuButton button)
+	{
+		buttons.add(button);
+		return button;
+	}
+
+	public void addText(String text, int x, int y, Font font, Color color)
+	{
+		texts.add(new MenuText(text, x, y, font, color));
+	}
+
+	public MenuBar addBar(MenuBar bar)
+	{
+		bars.add(bar);
+		return bar;
+	}
+
+	public MenuBox addTextBox(MenuBox box)
+	{
+		textBoxs.add(box);
+		return box;
+	}
+
+	public boolean isDone()
+	{
+		return done;
+	}
+
+	public void setDone(boolean done)
+	{
+		this.done = done;
+		if (done)
+		{
+			open = false;
+			Monopoly.Instance.closeMenu(this);
+			Monopoly.Instance.setCursor(Cursor.getDefaultCursor());
+			deregister();
+		}
+	}
+
+	public void open()
+	{
+		open = true;
+	}
+
+	public boolean isOpen()
+	{
+		return open;
+	}
+
+	public void update()
+	{
+		for (MenuBar bar : bars)
+			bar.update();
+
+		for (MenuBox textBox : textBoxs)
+			textBox.update();
+
+		onUpdate();
+	}
+
+	public void render(Graphics g)
+	{
+		if (image != null)
+			g.drawImage(image, x, y, Monopoly.Instance);
+		else if (color != null)
+		{
+			g.setColor(color);
+			g.fillRect(x, y, width, height);
+		}
+
+		onRender(g);
+
+		for (MenuButton button : buttons)
+			button.render(g);
+
+		for (MenuText text : texts)
+			text.render(g);
+
+		for (MenuBar bar : bars)
+			bar.render(g);
+
+		for (MenuBox textBox : textBoxs)
+			textBox.render(g);
+	}
+
+	public void mouseClicked(MouseEvent e)
+	{
+
+	}
+
+	public void mousePressed(MouseEvent e)
+	{
+		if (!(this instanceof GameMenu || this instanceof InfoMenu))
+		{
+			if (Monopoly.Instance.getMostRecentMenu() != this)
+				return;
+		} else
+		{
+			if (Monopoly.Instance.isMenuOpen())
+				return;
+		}
+
+		for (MenuButton button : buttons)
+		{
+			if (button.isDisabled() || !button.isVisible())
+				continue;
+
+			if (button.getRectangle().contains(e.getX(), e.getY()))
+			{
+				button.onClick();
+				button.setClicked(true);
+				button.getClickSound().play();
+
+				for (MenuButton other : buttons)
+				{
+					if (other != button)
+						other.setClicked(false);
+				}
+			} else
+				button.setClicked(false);
+		}
+
+		for (MenuBox textBox : textBoxs)
+		{
+			if (!textBox.isVisible())
+				continue;
+
+			if (textBox.getRectangle().contains(e.getX(), e.getY()))
+			{
+				textBox.setSelected(true);
+				Monopoly.Instance.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+
+				for (MenuBox box : textBoxs)
+				{
+					if (box != textBox)
+						box.setSelected(false);
+				}
+			} else
+				textBox.setSelected(false);
+		}
+	}
+
+	public void mouseReleased(MouseEvent e)
+	{
+		if (!(this instanceof GameMenu || this instanceof InfoMenu))
+		{
+			if (Monopoly.Instance.getMostRecentMenu() != this)
+				return;
+		} else
+		{
+			if (Monopoly.Instance.isMenuOpen())
+				return;
+		}
+
+		for (MenuButton button : buttons)
+			button.setClicked(false);
+	}
+
+	public void mouseEntered(MouseEvent e)
+	{
+
+	}
+
+	public void mouseExited(MouseEvent e)
+	{
+
+	}
+
+	public void mouseDragged(MouseEvent e)
+	{
+
+	}
+
+	private MenuButton getButtonAtPoint(int x, int y)
+	{
+		for (MenuButton button : buttons)
+		{
+			if (button.isDisabled() || !button.isVisible())
+				continue;
+
+			if (button.getRectangle().contains(x, y))
+				return button;
+		}
+		return null;
+	}
+
+	private Set<MenuButton> mouseIn = new HashSet<MenuButton>();
+
+	public void mouseMoved(MouseEvent e)
+	{
+		if (!(this instanceof GameMenu || this instanceof InfoMenu))
+		{
+			if (Monopoly.Instance.getMostRecentMenu() != this)
+				return;
+		} else
+		{
+			if (Monopoly.Instance.isMenuOpen())
+				return;
+		}
+
+		for (MenuButton button : buttons)
+		{
+			if (button.isDisabled() || !button.isVisible())
+				continue;
+
+			if (button.getRectangle().contains(e.getX(), e.getY()))
+			{
+				button.setMouseOver(true);
+				Monopoly.Instance.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+				if (mouseIn.add(button))
+					button.getHoverSound().play();
+
+				for (MenuButton other : buttons)
+					other.setMouseOver(other != button ? false : true);
+
+				break;
+			} else
+			{
+				mouseIn.remove(button);
+				button.setMouseOver(false);
+				Monopoly.Instance.setCursor(Cursor.getDefaultCursor());
+			}
+		}
+
+		for (MenuBox textBox : textBoxs)
+		{
+			if (!textBox.isVisible())
+				continue;
+
+			if (textBox.getRectangle().contains(e.getX(), e.getY()))
+			{
+				textBox.setMouseOver(true);
+				Monopoly.Instance.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+
+				for (MenuBox box : textBoxs)
+					box.setMouseOver(box != textBox ? false : true);
+			} else
+			{
+				textBox.setMouseOver(false);
+				Monopoly.Instance.setCursor(Cursor.getDefaultCursor());
+			}
+		}
+	}
+
+	public void onForceClose()
+	{
+		setDone(true);
+	}
+
+	public void keyPressed(KeyEvent e)
+	{
+		if (!(this instanceof GameMenu || this instanceof InfoMenu))
+		{
+			if (Monopoly.Instance.getMostRecentMenu() != this)
+				return;
+		} else
+		{
+			if (Monopoly.Instance.isMenuOpen())
+				return;
+		}
+
+		if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+			onForceClose();
+		else
+		{
+			if (e.getKeyCode() == KeyEvent.VK_ENTER)
+			{
+				for (MenuBox textBox : textBoxs)
+				{
+					if (textBox.isSelected())
+					{
+						if (!textBox.onDone())
+							return;
+
+						textBox.setSelected(false);
+						break;
+					}
+				}
+				return;
+			}
+
+			if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE)
+			{
+				for (MenuBox textBox : textBoxs)
+				{
+					if (textBox.isSelected())
+					{
+						textBox.removeCharacter();
+						break;
+					}
+				}
+				return;
+			}
+
+			char c = e.getKeyChar();
+			if (!Character.isAlphabetic(c) && !Character.isDigit(c))
+				return;
+
+			for (MenuBox textBox : textBoxs)
+			{
+				if (textBox.isSelected())
+				{
+					textBox.addCharacter(c);
+					break;
+				}
+			}
+		}
+	}
+
+	public void keyReleased(KeyEvent e)
+	{
+
+	}
+
+	public void keyTyped(KeyEvent e)
+	{
+
+	}
+
+	public abstract void onUpdate();
+
+	public abstract void onRender(Graphics g);
+}

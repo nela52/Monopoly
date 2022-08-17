@@ -1,0 +1,30 @@
+1626144001680	Move compilation units
+1626144024390	Move compilation unit
+1626150798197	Delete element
+1626253131896	Rename field 'startedTurn'
+1626253152291	Rename field 'rolled'
+1626256851650	Rename local variable 'groupValue'
+1626258002543	Rename field 'turn'
+1626258016683	Delete element
+1626258019901	Move compilation unit
+1626258325634	Rename local variable 'player'
+1626303758662	Delete element
+1626315405639	Rename local variable 'textHeight'
+1626316200180	Rename method 'cycleTurn'
+1626317917709	Rename local variable 'player'
+1626327695114	Rename local variable 'twoButtonImg'
+1626327702622	Rename local variable 'twoButtonX'
+1626327707132	Rename local variable 'twoButtonY'
+1626402046555	Rename local variable 'sortedPlayers'
+1626404035657	Rename local variable 'startX'
+1626404040682	Rename local variable 'y'
+1626405012797	Move compilation units
+1626405017255	Delete element
+1626405031590	Move compilation units
+1626405044524	Delete element
+1626405074998	Move compilation units
+1626499550669	Rename local variable 'clickedIn'
+1626499554257	Rename field 'clickedIn'
+1626507264016	Rename local variable 'maxBid'
+1626509489521	Rename local variable 'players'
+1626510021262	Copy method

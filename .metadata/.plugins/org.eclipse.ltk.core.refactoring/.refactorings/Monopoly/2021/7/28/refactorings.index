@@ -1,0 +1,34 @@
+1625527334765	Delete element
+1625531197705	Delete element
+1625531225698	Move file
+1625531452401	Delete element
+1625532063012	Delete element
+1625532404964	Delete element
+1625532608163	Delete element
+1625532698729	Move compilation units
+1625532941538	Rename field 'sound'
+1625871949487	Delete element
+1625880847518	Rename local variable 'buttonX'
+1625880851996	Rename local variable 'buttonY'
+1625880897055	Rename local variable 'buyButtonImg'
+1625880905593	Rename local variable 'buyButtonX'
+1625880913586	Rename local variable 'buyButtonY'
+1625881845055	Rename local variable 'source'
+1625881852585	Rename local variable 'target'
+1625881866612	Rename local variable 'g'
+1625881884887	Rename method 'makeImageTranslucent'
+1625882178843	Rename method 'makeTranslucent'
+1625883192752	Rename local variable 'g'
+1625883200607	Rename method 'makeImageTranslucent'
+1625883233313	Rename local variable 'target'
+1625883240830	Rename local variable 'source'
+1625888998055	Rename field 'BAR'
+1625891948103	Delete element
+1625893448847	Rename type 'ItemPosition'
+1625895373838	Rename field 'step'
+1625895652950	Rename field 'upStep'
+1625895658660	Rename field 'downStep'
+1625898412085	Rename method 'addAI'
+1625898676794	Rename type 'TurnDisplay'
+1625900353818	Rename field 'HIGHTLIGHT'
+1625900361792	Rename field 'SELECTED'

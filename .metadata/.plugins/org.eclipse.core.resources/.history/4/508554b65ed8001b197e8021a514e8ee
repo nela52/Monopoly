@@ -1,0 +1,16 @@
+package me.an.mp;
+
+import me.an.mp.tile.Tile;
+
+public class MoveThread extends Thread
+{
+	public MoveThread(Player player, Tile to)
+	{
+		
+	}
+	
+	public synchronized void start()
+	{
+		super.start();
+	}
+}

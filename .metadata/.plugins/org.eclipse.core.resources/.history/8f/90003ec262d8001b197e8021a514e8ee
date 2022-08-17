@@ -1,0 +1,204 @@
+package me.an.mp;
+
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
+import me.an.mp.card.CardType;
+import me.an.mp.tile.Tile;
+import me.an.mp.tile.TileSide;
+import me.an.mp.util.PlayerColor;
+
+public class Player
+{
+	private Token token;
+	private BufferedImage image;
+	private PlayerColor color;
+	private Tile currTile;
+	private int x, y;
+	private int money;
+	private List<Tile> properties;
+
+	private boolean moving = false;
+	private Tile moveTo;
+
+	public Player(Token token)
+	{
+		this.token = token;
+		this.image = token.getImage();
+		this.color = PlayerColor.random();
+		this.currTile = Board.Go;
+		this.properties = new ArrayList<Tile>();
+		x = getPlayerPos(currTile).x;
+		y = getPlayerPos(currTile).y;
+	}
+
+	public Token getToken()
+	{
+		return token;
+	}
+
+	public PlayerColor getColor()
+	{
+		return color;
+	}
+
+	public Tile getCurrentTile()
+	{
+		return currTile;
+	}
+
+	public void setCurrentTile(Tile tile)
+	{
+		currTile = tile;
+	}
+
+	public int getMoney()
+	{
+		return money;
+	}
+
+	public void addMoney(int amount)
+	{
+		money += amount;
+	}
+
+	public void subtractMoney(int amount)
+	{
+		//int newBal = money - amount; //TODO handle negative balance
+		money -= amount;
+	}
+
+	public boolean hasMoney(int amount)
+	{
+		return money >= amount;
+	}
+
+	public void giveMoney(int amount, Player player)
+	{
+		subtractMoney(amount);
+		player.addMoney(amount);
+	}
+
+	public List<Tile> getProperties()
+	{
+		return properties;
+	}
+
+	public boolean ownsTile(Tile tile)
+	{
+		for (Tile other : properties)
+		{
+			if (other.getName().equalsIgnoreCase(tile.getName()))
+				return true;
+		}
+		return false;
+	}
+
+	public Point getPosition()
+	{
+		return new Point(x, y);
+	}
+
+	public void setPosition(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+
+	public Point getPlayerPos(Tile tile)
+	{
+		Point tilePos = tile.getPosition();
+		int xPos = tilePos.x + (tile.getImage().getWidth() / 2 - image.getWidth() / 2);
+		int yPos = tilePos.y + (tile.getImage().getHeight() / 2 - image.getHeight() / 2);
+		return new Point(xPos, yPos);
+	}
+
+	public Point getPosOnTile(Tile tile)
+	{
+		List<Player> tilePlayers = Monopoly.Instance.getBoard().getPlayersOnTile(tile);
+
+		Point pos = getPlayerPos(tile);
+		int xPos = pos.x, yPos = pos.y;
+
+		xPos -= (tilePlayers.indexOf(this) + 1) * token.getImage().getWidth();
+
+		int totalWidth = 0;
+		for (Player player : tilePlayers)
+			totalWidth += player.getToken().getImage().getWidth();
+
+		xPos += (tile.getImage().getWidth() / 2 + totalWidth / (tilePlayers.size() * 2));
+
+		return new Point(xPos, yPos);
+	}
+
+	public void reposition()
+	{
+		Point pos = getPosOnTile(currTile);
+		x = pos.x;
+		y = pos.y;
+	}
+
+	public void giveCard(CardType type)
+	{
+		//TODO implement
+	}
+
+	public void moveToTile(Tile tile)
+	{
+		moving = true;
+		moveTo = tile;
+	}
+	
+	public Tile getTileIn()
+	{
+		for(Tile tile : Monopoly.Instance.getBoard().getTiles())
+		{
+			Rectangle tileRect = new Rectangle(tile.getPosition().x, tile.getPosition().y, tile.getImage().getWidth(), tile.getImage().getHeight());
+		}
+	}
+
+	final int step = 2;
+
+	public void update()
+	{
+		if (moving)
+		{
+			Tile next = currTile.next;
+
+			if (next.getTileSide() == TileSide.BOTTOM)
+				x -= step;
+
+			if (next.getTileSide() == TileSide.LEFT)
+				y -= step;
+
+			if (next.getTileSide() == TileSide.TOP)
+				x += step;
+
+			if (next.getTileSide() == TileSide.RIGHT)
+				y += step;
+
+			if (getPosition().equals(getPlayerPos(next)))
+			{
+				currTile = next;
+				System.out.println(currTile.getName());
+			}
+			
+			System.out.println(getPosition() + " " + getPlayerPos(next));
+
+			if (currTile == moveTo)
+			{
+				moving = false;
+				return;
+			}
+		}
+	}
+
+	public void render(Graphics g)
+	{
+		g.drawImage(image, x, y, Monopoly.Instance);
+	}
+}

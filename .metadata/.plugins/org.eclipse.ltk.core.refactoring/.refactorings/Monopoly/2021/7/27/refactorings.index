@@ -1,0 +1,31 @@
+1625108738227	Move compilation unit
+1625172052806	Rename local variable 'bi'
+1625172077845	Rename local variable 'cm'
+1625172310186	Rename type 'ImageUtil'
+1625173170553	Rename local variable 'subtitleX'
+1625173179569	Rename local variable 'sizeX'
+1625173185083	Rename local variable 'subtitleY'
+1625173193121	Rename local variable 'w'
+1625173198133	Rename local variable 'h'
+1625173475337	Rename local variable 'subtitleFont'
+1625175725763	Rename local variable 'image'
+1625175733270	Rename local variable 'img'
+1625176214438	Rename local variable 'g2d'
+1625176490614	Rename field 'HIGHTLIGHT_LOW'
+1625176509110	Rename method 'brightenImage'
+1625180944241	Delete element
+1625181175842	Delete element
+1625181451315	Rename field 'DARKEN'
+1625191773863	Delete element
+1625192235145	Delete element
+1625192338760	Delete element
+1625192362662	Delete element
+1625196090212	Delete element
+1625211390927	Rename local variable 'resizedImage'
+1625211402386	Rename local variable 'img_width'
+1625211419423	Rename local variable 'img_height'
+1625211450484	Rename local variable 'originalImage'
+1625214169288	Rename field 'MOVE_STEP'
+1625277769751	Rename method 'scaleImage'
+1625296511605	Rename method 'getTextSize'
+1625340997250	Rename local variable 'in'

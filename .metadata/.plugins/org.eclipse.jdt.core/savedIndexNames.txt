@@ -1,0 +1,7 @@
+INDEX VERSION 1.131+D:\My Stuff\Monopoly\.metadata\.plugins\org.eclipse.jdt.core
+3513334725.index
+1608228005.index
+978316587.index
+1555038968.index
+1671692264.index
+2999664824.index

@@ -1,0 +1,492 @@
+package me.an.mp;
+
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import me.an.mp.display.TokenDisplay;
+import me.an.mp.display.Window;
+import me.an.mp.event.EventHandler;
+import me.an.mp.event.MonoEvent;
+import me.an.mp.event.MonoListener;
+import me.an.mp.event.events.CycleTurnEvent;
+import me.an.mp.event.events.DiceRollEvent;
+import me.an.mp.event.events.auction.AuctionEndEvent;
+import me.an.mp.event.events.player.NegativeBalanceEvent;
+import me.an.mp.event.events.player.SelectTokenEvent;
+import me.an.mp.event.events.tile.BoughtTileEvent;
+import me.an.mp.event.events.tile.LandOnTileEvent;
+import me.an.mp.menu.Menu;
+import me.an.mp.menu.menus.AuctionMenu;
+import me.an.mp.menu.menus.GameMenu;
+import me.an.mp.menu.menus.InfoMenu;
+import me.an.mp.menu.menus.StartMenu;
+import me.an.mp.player.Player;
+import me.an.mp.player.Token;
+import me.an.mp.tile.PropertyCards;
+import me.an.mp.tile.RailroadTile;
+import me.an.mp.tile.SpecialTile;
+import me.an.mp.tile.Tile;
+import me.an.mp.tile.UtilityTile;
+import me.an.mp.util.UtilMath;
+
+@SuppressWarnings("serial")
+public class Monopoly extends Canvas implements Runnable, MonoListener
+{
+	public static final int WIDTH = 1000, HEIGHT = 1000;
+	public static final String TITLE = "Monopoly";
+
+	public static final int TILE_WIDTH = 78, TILE_HEIGHT = 134;
+	public static final int NUM_TILES = 40;
+
+	private Thread thread;
+	private boolean running = false;
+
+	private List<Menu> menus;
+	private Map<Menu, Long> openMenus;
+
+	private List<Player> players;
+	private Board board;
+	private Dice dice;
+	private Player player;
+
+	private List<Player> playerTurns;
+	private Player turnPlayer;
+	private int turnTime = Defaults.TURN_TIME * 60, maxTurnTime = Defaults.TURN_TIME * 60;
+
+	private GameMenu gameMenu;
+	private TokenDisplay tokenDisplay;
+
+	private int tick = 0;
+	private int timeBetweenTurn = Defaults.TIME_BETWEEN_TURNS;
+	private boolean awaitingNextTurn = false;
+
+	private Auction auction;
+
+	public static Monopoly Instance;
+
+	public Monopoly()
+	{
+		new Window(WIDTH, HEIGHT, TITLE, this);
+	}
+
+	public synchronized void start()
+	{
+		thread = new Thread(this);
+		thread.start();
+		running = true;
+	}
+
+	public synchronized void stop()
+	{
+		try
+		{
+			thread.join();
+			running = false;
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public void run()
+	{
+		long lastTime = System.nanoTime();
+		double amountOfTicks = 60.0;
+		double ns = 1000000000 / amountOfTicks;
+		double delta = 0;
+		long timer = System.currentTimeMillis();
+		int frames = 0, ticks = 0;
+
+		initGame();
+
+		while (running)
+		{
+			long now = System.nanoTime();
+			delta += (now - lastTime) / ns;
+			lastTime = now;
+
+			while (delta >= 1)
+			{
+				tick();
+				delta--;
+				ticks++;
+
+				if (running)
+					render();
+
+				frames++;
+			}
+
+			if (System.currentTimeMillis() - timer > 1000)
+			{
+				timer += 1000;
+				System.out.println("FPS: " + frames + ", Ticks: " + ticks);
+				frames = 0;
+				ticks = 0;
+			}
+		}
+
+		stop();
+	}
+
+	private void initGame()
+	{
+		EventHandler.initialize();
+		EventHandler.Instance.addListener(this);
+
+		menus = new ArrayList<Menu>();
+		openMenus = new HashMap<Menu, Long>();
+
+		board = new Board();
+		dice = new Dice();
+
+		players = new ArrayList<Player>();
+		player = new Player(Token.Tokens[UtilMath.r(Token.Tokens.length)]);
+		players.add(player);
+
+		PropertyCards.initialize();
+
+		openMenu(gameMenu = new GameMenu());
+		openMenu(new StartMenu(player));
+	}
+
+	private void initPlayers()
+	{
+		playerTurns = new ArrayList<Player>();
+
+		for (int i = 0; i < 3; i++)
+			players.add(new AI(Token.random()));
+
+		for (Player player : players)
+			player.reposition();
+
+		playerTurns.addAll(players);
+		Collections.shuffle(playerTurns);
+
+		tokenDisplay = new TokenDisplay();
+
+		startNextTurn();
+	}
+
+	private void tick()
+	{
+		tick++;
+
+		for (Menu menu : menus)
+		{
+			if (!menu.isDone() && menu.isOpen())
+				menu.update();
+		}
+
+		board.update();
+		dice.update();
+
+		for (Player player : players)
+			player.update();
+
+		if (tokenDisplay != null)
+			tokenDisplay.update();
+
+		if (turnPlayer == player)
+		{
+			turnTime--;
+
+			double timePercent = ((double) turnTime) / ((double) maxTurnTime);
+			gameMenu.getTurnTimeBar().setPercent(timePercent);
+
+			if (turnTime == 0)
+			{
+				turnTime = maxTurnTime;
+				cycleTurn();
+			}
+		}
+
+		if (auction != null)
+		{
+			auction.update();
+			return; //Don't allow next turn to start
+		}
+
+		if (awaitingNextTurn)
+		{
+			if (tick % 60 == 0)
+				timeBetweenTurn--;
+
+			if (timeBetweenTurn == 0)
+			{
+				awaitingNextTurn = false;
+				cycleTurn();
+			}
+		}
+	}
+
+	private void render()
+	{
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null)
+		{
+			createBufferStrategy(3);
+			return;
+		}
+
+		Graphics g = bs.getDrawGraphics();
+
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, WIDTH, HEIGHT);
+
+		board.render(g);
+		dice.render(g);
+
+		for (Player player : players)
+			player.render(g);
+
+		if (tokenDisplay != null)
+			tokenDisplay.render(g);
+
+		for (Menu menu : menus)
+		{
+			if (!menu.isDone() && menu.isOpen())
+				menu.render(g);
+		}
+
+		g.dispose();
+		bs.show();
+	}
+
+	public void onEvent(MonoEvent event)
+	{
+		if (event instanceof SelectTokenEvent)
+		{
+			SelectTokenEvent sEvent = (SelectTokenEvent) event;
+			Player player = sEvent.getPlayer();
+			Token selectedToken = sEvent.getToken();
+			player.setToken(selectedToken);
+
+			Token.addUsed(selectedToken);
+			initPlayers();
+			return;
+		}
+
+		if (event instanceof DiceRollEvent)
+		{
+			DiceRollEvent dEvent = (DiceRollEvent) event;
+			Player movePlayer = dEvent.getPlayer();
+			Dice dice = dEvent.getDice();
+			movePlayer.moveForward(dice.getShowing());
+			return;
+		}
+
+		if (event instanceof LandOnTileEvent)
+		{
+			LandOnTileEvent e = (LandOnTileEvent) event;
+			if (e.getPlayer() != player)
+				return;
+
+			Tile tile = e.getTile();
+			if (tile.getOwner() == null && !(tile instanceof SpecialTile) && !(tile instanceof RailroadTile || tile instanceof UtilityTile)) //TODO: FIX!!!!!
+				return;
+
+			if (dice.isDoubles())
+				dice.show(player);
+			else
+				gameMenu.showDoneButton(true);
+		}
+
+		if (event instanceof BoughtTileEvent)
+		{
+			BoughtTileEvent e = (BoughtTileEvent) event;
+			Player buyer = e.getPlayer();
+			Tile tile = e.getTile();
+			Monopoly.Instance.openMenu(new InfoMenu((player == buyer ? "You" : buyer.getColor().getName()) + " bought " + tile.getName() + "!"));
+
+			if (e.getPlayer() == player)
+			{
+				if (dice.isDoubles())
+					dice.show(player);
+				else
+					gameMenu.showDoneButton(true);
+			}
+		}
+
+		if (event instanceof AuctionEndEvent)
+		{
+			auction.getWinner().buyTile(auction.getTile(), auction.getMaxBid());
+			auction = null;
+		}
+
+		if (event instanceof NegativeBalanceEvent)
+		{
+
+		}
+	}
+
+	public Board getBoard()
+	{
+		return board;
+	}
+
+	public Player getPlayer()
+	{
+		return player;
+	}
+
+	public List<Player> getPlayers()
+	{
+		return players;
+	}
+
+	public Dice getDice()
+	{
+		return dice;
+	}
+
+	public List<Player> getTurnOrder()
+	{
+		return playerTurns;
+	}
+
+	public Player getTurnPlayer()
+	{
+		return turnPlayer;
+	}
+
+	public void startNextTurn()
+	{
+		timeBetweenTurn = Defaults.TIME_BETWEEN_TURNS;
+		awaitingNextTurn = true;
+	}
+
+	private void cycleTurn()
+	{
+		if (dice.isDoubles() && dice.hasRolled()) //TODO go to jail if doubles 3x
+		{
+			EventHandler.Instance.callEvent(new CycleTurnEvent(turnPlayer));
+			return;
+		}
+
+		if (turnPlayer == null || playerTurns.indexOf(turnPlayer) == playerTurns.size() - 1)
+			turnPlayer = playerTurns.get(0);
+		else
+			turnPlayer = playerTurns.get(playerTurns.indexOf(turnPlayer) + 1);
+
+		//turnPlayer = player; //TODO: REMOVE
+
+		if (turnPlayer == player)
+		{
+			dice.show(player);
+			gameMenu.showTurnTimer();
+		}else
+		gameMenu.showDoneButton(false);
+
+		EventHandler.Instance.callEvent(new CycleTurnEvent(turnPlayer));
+	}
+
+	public boolean awaitingNextTurn()
+	{
+		return awaitingNextTurn;
+	}
+
+	public GameMenu getGameMenu()
+	{
+		return gameMenu;
+	}
+
+	public boolean isMenuOpen()
+	{
+		for (Menu menu : menus)
+		{
+			if (menu instanceof InfoMenu || menu instanceof GameMenu)
+				continue;
+
+			if (menu.isOpen())
+				return true;
+		}
+		return false;
+	}
+
+	public Menu getMostRecentMenu()
+	{
+		Menu mostRecent = null;
+		for (Menu menu : openMenus.keySet())
+		{
+			if (menu instanceof InfoMenu || menu instanceof GameMenu)
+				continue;
+
+			if (mostRecent == null || openMenus.get(menu) > openMenus.get(mostRecent))
+				mostRecent = menu;
+		}
+		return mostRecent;
+	}
+
+	private void addMenu(Menu menu)
+	{
+		menus.add(menu);
+		menu.register(this);
+	}
+
+	public void openMenu(Menu menu)
+	{
+		if (!(menu instanceof InfoMenu || menu instanceof GameMenu))
+			deregisterMenus();
+		openMenus.put(menu, System.currentTimeMillis());
+		addMenu(menu);
+		menu.open();
+	}
+
+	public void closeMenu(Menu menu)
+	{
+		openMenus.remove(menu);
+		reregisterMenus();
+	}
+
+	public void startAuction(Tile tile, Player startedAuc)
+	{
+		auction = new Auction(tile, startedAuc);
+		openMenu(new AuctionMenu(auction, startedAuc));
+	}
+
+	private List<MouseListener> getMenuListeners()
+	{
+		List<MouseListener> listeners = new ArrayList<MouseListener>();
+		listeners.add(dice);
+		listeners.add(tokenDisplay);
+		for (Menu menu : openMenus.keySet())
+			listeners.add(menu);
+		return listeners;
+	}
+
+	public void deregisterMenus()
+	{
+		for (MouseListener listener : getMenuListeners())
+		{
+			removeMouseListener(listener);
+			removeMouseMotionListener((MouseMotionListener) listener);
+		}
+	}
+
+	public void reregisterMenus()
+	{
+		for (MouseListener listener : getMenuListeners())
+		{
+			if (!openMenus.containsKey(listener) && !(listener instanceof Dice || listener instanceof TokenDisplay))
+				continue;
+
+			addMouseListener(listener);
+			addMouseMotionListener((MouseMotionListener) listener);
+		}
+	}
+
+	public static void main(String[] args)
+	{
+		Instance = new Monopoly();
+	}
+}

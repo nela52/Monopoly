@@ -1,0 +1,219 @@
+package me.an.mp;
+
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.util.Arrays;
+
+import me.an.mp.display.DesignManager;
+import me.an.mp.event.EventHandler;
+import me.an.mp.event.events.DiceRollEvent;
+import me.an.mp.player.Player;
+import me.an.mp.sound.Sounds;
+import me.an.mp.util.AnimatedImage;
+import me.an.mp.util.SpriteSheet;
+
+public class Dice implements MouseListener, MouseMotionListener
+{
+	private SpriteSheet DiceSheet = new SpriteSheet("DiceSheet.png", 124, 124);
+	private BufferedImage Side1 = DiceSheet.getSprite(0, 0);
+	private BufferedImage Side2 = DiceSheet.getSprite(1, 0);
+	private BufferedImage Side3 = DiceSheet.getSprite(2, 0);
+	private BufferedImage Side4 = DiceSheet.getSprite(3, 0);
+	private BufferedImage Side5 = DiceSheet.getSprite(4, 0);
+	private BufferedImage Side6 = DiceSheet.getSprite(5, 0);
+	private AnimatedImage dice1, dice2;
+
+	private Player playerRolling;
+
+	private int timeRolling = 0, timeShown = 0;
+	private boolean waitingPlayer = false, updating = false, doneRolling = false, hasRolled = false, movePlayer = true;
+
+	public static final int ROLL_TIME = 3, SHOW_TIME = 1;
+
+	private int x1, x2, y;
+	private Rectangle rect1, rect2;
+
+	public Dice()
+	{
+		dice1 = new AnimatedImage(Arrays.asList(Side1, Side2, Side3, Side4, Side5, Side6), 3);
+		dice2 = new AnimatedImage(Arrays.asList(Side1, Side2, Side3, Side4, Side5, Side6), 3);
+		x1 = (Monopoly.WIDTH / 2) - (Side1.getWidth() / 2) - (Side1.getWidth() / 2) - DesignManager.OFFSET;
+		x2 = (Monopoly.WIDTH / 2) - (Side1.getWidth() / 2) + (Side1.getWidth() / 2) + DesignManager.OFFSET;
+		y = (Monopoly.HEIGHT / 2) - (Side1.getHeight() / 2);
+		rect1 = new Rectangle(x1, y, Side1.getWidth(), Side1.getHeight());
+		rect2 = new Rectangle(x2, y, Side1.getWidth(), Side1.getHeight());
+		Monopoly.Instance.addMouseListener(this);
+		Monopoly.Instance.addMouseMotionListener(this);
+	}
+
+	public void show(Player player)
+	{
+		waitingPlayer = true;
+		playerRolling = player;
+	}
+
+	public void roll(Player player)
+	{
+		waitingPlayer = false;
+		playerRolling = player;
+		timeRolling = 0;
+		updating = true;
+		hasRolled = true;
+		dice1.randomize();
+		dice2.randomize();
+	}
+
+	public void rollWithoutMove(Player player)
+	{
+		movePlayer = false;
+		waitingPlayer = false;
+		playerRolling = player;
+		timeRolling = 0;
+		updating = true;
+		hasRolled = true;
+		dice1.randomize();
+		dice2.randomize();
+	}
+
+	private int getShowing(BufferedImage diceImage)
+	{
+		if (diceImage == Side1)
+			return 1;
+		else if (diceImage == Side2)
+			return 2;
+		else if (diceImage == Side3)
+			return 3;
+		else if (diceImage == Side4)
+			return 4;
+		else if (diceImage == Side5)
+			return 5;
+		else if (diceImage == Side6)
+			return 6;
+		return -1;
+	}
+
+	public int getShowing()
+	{
+		return getShowing(dice1.getImage()) + getShowing(dice2.getImage());
+	}
+
+	public boolean isRolling()
+	{
+		return updating || doneRolling;
+	}
+
+	public boolean isDoubles()
+	{
+		return getShowing(dice1.getImage()) == getShowing(dice2.getImage());
+	}
+
+	public boolean hasRolled()
+	{
+		return hasRolled;
+	}
+
+	public boolean onDice(int x, int y)
+	{
+		return rect1.contains(x, y) || rect2.contains(x, y);
+	}
+
+	private void resetDice()
+	{
+		playerRolling = null;
+		timeRolling = 0;
+		timeShown = 0;
+		waitingPlayer = false;
+		updating = false;
+		doneRolling = false;
+		movePlayer = true;
+	}
+
+	public void update()
+	{
+		if (updating)
+		{
+			if (timeRolling++ == ROLL_TIME * 60)
+			{
+				updating = false;
+				doneRolling = true;
+				Sounds.DICE_ROLL.stop();
+				Sounds.DICE_LAND.play();
+				return;
+			}
+
+			if (dice1.update())
+				Sounds.DICE_ROLL.play();
+
+			dice2.update();
+		}
+
+		if (doneRolling)
+		{
+			if (timeShown++ == SHOW_TIME * 60)
+			{
+				if (movePlayer)
+					EventHandler.Instance.callEvent(new DiceRollEvent(playerRolling, this));
+				resetDice();
+			}
+		}
+	}
+
+	public void render(Graphics g)
+	{
+		if (waitingPlayer || updating || doneRolling)
+		{
+			g.drawImage(dice1.getImage(), x1, y, Monopoly.Instance);
+			g.drawImage(dice2.getImage(), x2, y, Monopoly.Instance);
+		}
+	}
+
+	public void mouseClicked(MouseEvent e)
+	{
+
+	}
+
+	public void mousePressed(MouseEvent e)
+	{
+		if (Monopoly.Instance.isMenuOpen())
+			return;
+
+		if (Monopoly.Instance.getTurnPlayer() != playerRolling || !waitingPlayer)
+			return;
+
+		Point clickPoint = new Point(e.getX(), e.getY());
+		if (!(rect1.contains(clickPoint) || rect2.contains(clickPoint)))
+			return;
+
+		roll(playerRolling);
+	}
+
+	public void mouseReleased(MouseEvent e)
+	{
+
+	}
+
+	public void mouseEntered(MouseEvent e)
+	{
+
+	}
+
+	public void mouseExited(MouseEvent e)
+	{
+
+	}
+
+	public void mouseDragged(MouseEvent e)
+	{
+
+	}
+
+	public void mouseMoved(MouseEvent e)
+	{
+
+	}
+}

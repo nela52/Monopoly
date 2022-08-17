@@ -1,0 +1,76 @@
+package me.an.mp.menu;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+
+import me.an.mp.Monopoly;
+
+public abstract class MenuButton
+{
+	private int x, y, width, height;
+	private BufferedImage image;
+	private Rectangle rect;
+	private boolean mouseOver = false;
+
+	public MenuButton(int x, int y, BufferedImage image)
+	{
+		this.x = x;
+		this.y = y;
+		this.image = image;
+		this.width = image.getWidth();
+		this.height = image.getHeight();
+		this.rect = new Rectangle(x, y, width, height);
+	}
+
+	public int getX()
+	{
+		return x;
+	}
+
+	public int getY()
+	{
+		return y;
+	}
+
+	public int getWidth()
+	{
+		return width;
+	}
+
+	public int getHeight()
+	{
+		return height;
+	}
+
+	public BufferedImage getImage()
+	{
+		return image;
+	}
+
+	public Rectangle getRectangle()
+	{
+		return rect;
+	}
+
+	public void setMouseOver(boolean mouseOver)
+	{
+		this.mouseOver = mouseOver;
+	}
+
+	public abstract void onClick();
+
+	public void onMouseOver(Graphics g)
+	{
+		g.setColor(new Color(255, 255, 255, 123));
+		g.fillRect(x, y, width, height);
+	}
+
+	public void render(Graphics g)
+	{
+		g.drawImage(image, x, y, Monopoly.Instance);
+		if (mouseOver)
+			onMouseOver(g);
+	}
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename field &apos;turnTimerBar&apos; in &apos;me.an.mp.menu.menus.GameMenu&apos; to &apos;turnTimeBar&apos;&#x0D;&#x0A;- Original project: &apos;Monopoly&apos;&#x0D;&#x0A;- Original element: &apos;me.an.mp.menu.menus.GameMenu.turnTimerBar&apos;&#x0D;&#x0A;- Renamed element: &apos;me.an.mp.menu.menus.GameMenu.turnTimeBar&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" delegate="false" deprecate="false" description="Rename field &apos;turnTimerBar&apos;" flags="589826" getter="false" id="org.eclipse.jdt.ui.rename.field" input="/src&lt;me.an.mp.menu.menus{GameMenu.java[GameMenu^turnTimerBar" name="turnTimeBar" references="true" setter="false" stamp="1627887288827" textual="false" version="1.0"/>
+</session>

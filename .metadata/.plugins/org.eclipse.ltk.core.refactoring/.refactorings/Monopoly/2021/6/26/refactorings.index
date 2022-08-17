@@ -1,0 +1,33 @@
+1624420005437	Rename local variable 'lastTime'
+1624420019933	Rename local variable 'amountOfTicks'
+1624420028451	Rename local variable 'ns'
+1624420033469	Rename local variable 'delta'
+1624420037984	Rename local variable 'timer'
+1624420046531	Rename local variable 'lastTimeTicks'
+1624420115243	Rename local variable 'timerTick'
+1624420138335	Rename local variable 'now'
+1624433940045	Rename field 'houses'
+1624436820857	Rename field 'piece'
+1624436829978	Rename local variable 'piece'
+1624439213374	Rename local variable 'currTile'
+1624440773418	Delete element
+1624502857095	Rename local variable 'neww'
+1624502867090	Rename local variable 'newh'
+1624502880632	Rename local variable 'w'
+1624502887143	Rename local variable 'h'
+1624502894140	Rename local variable 'bimg'
+1624502906163	Rename local variable 'g'
+1624502982247	Rename local variable 'img'
+1624502987264	Rename local variable 'angle'
+1624503083270	Move compilation unit
+1624503085894	Move compilation unit
+1624504030286	Rename package 'me.an.mp.tiles'
+1624504037292	Move compilation unit
+1624504088217	Move compilation unit
+1624505138530	Delete element
+1624505998154	Delete element
+1624506850919	Delete element
+1624508806558	Rename field 'GO'
+1624617724510	Delete element
+1624619914713	Delete element
+1624620017626	Delete element

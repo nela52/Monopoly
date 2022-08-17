@@ -1,0 +1,138 @@
+package me.an.mp;
+
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
+import me.an.mp.card.CardType;
+import me.an.mp.tile.Tile;
+import me.an.mp.util.PlayerColor;
+
+public class Player
+{
+	private Token token;
+	private BufferedImage image;
+	private PlayerColor color;
+	private Tile currTile;
+	private int x, y;
+	private int money;
+	private List<Tile> properties;
+
+	public Player(Token token)
+	{
+		this.token = token;
+		this.image = token.getImage();
+		this.color = PlayerColor.random();
+		this.currTile = Board.Go;
+		this.properties = new ArrayList<Tile>();
+		x = getPlayerPos(currTile).x;
+		y = getPlayerPos(currTile).y;
+	}
+
+	public Token getToken()
+	{
+		return token;
+	}
+
+	public PlayerColor getColor()
+	{
+		return color;
+	}
+
+	public Tile getCurrentTile()
+	{
+		return currTile;
+	}
+
+	public int getMoney()
+	{
+		return money;
+	}
+
+	public void addMoney(int amount)
+	{
+		money += amount;
+	}
+
+	public void subtractMoney(int amount)
+	{
+		//int newBal = money - amount; //TODO handle negative balance
+		money -= amount;
+	}
+
+	public boolean hasMoney(int amount)
+	{
+		return money >= amount;
+	}
+
+	public void giveMoney(int amount, Player player)
+	{
+		subtractMoney(amount);
+		player.addMoney(amount);
+	}
+
+	public List<Tile> getProperties()
+	{
+		return properties;
+	}
+
+	public boolean ownsTile(Tile tile)
+	{
+		for (Tile other : properties)
+		{
+			if (other.getName().equalsIgnoreCase(tile.getName()))
+				return true;
+		}
+		return false;
+	}
+
+	public Point getPosition()
+	{
+		return new Point(x, y);
+	}
+
+	public Point getPlayerPos(Tile tile)
+	{
+		Point tilePos = tile.getPosition();
+		int xPos = tilePos.x + (tile.getImage().getWidth() / 2 - image.getWidth() / 2);
+		int yPos = tilePos.y + (tile.getImage().getHeight() / 2 - image.getHeight() / 2);
+		return new Point(xPos, yPos);
+	}
+
+	public Point getPosOnTile(Tile tile)
+	{
+		List<Player> tilePlayers = Monopoly.Instance.getBoard().getPlayersOnTile(tile);
+
+		Point pos = getPlayerPos(tile);
+		int xPos = pos.x, yPos = pos.y;
+
+		xPos -= (tilePlayers.indexOf(this) + 1) * token.getImage().getWidth();
+
+		int totalWidth = 0;
+		for (Player player : tilePlayers)
+			totalWidth += player.getToken().getImage().getWidth();
+
+		xPos += totalWidth / 2;
+
+		return new Point(xPos, yPos);
+	}
+
+	public void reposition()
+	{
+		Point pos = getPosOnTile(currTile);
+		x = pos.x;
+		y = pos.y;
+	}
+
+	public void giveCard(CardType type)
+	{
+		//TODO implement
+	}
+
+	public void render(Graphics g)
+	{
+		g.drawImage(image, x, y, Monopoly.Instance);
+	}
+}

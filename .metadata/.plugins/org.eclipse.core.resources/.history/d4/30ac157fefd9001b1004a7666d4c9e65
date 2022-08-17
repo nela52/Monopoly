@@ -1,0 +1,122 @@
+package me.an.mp.menu;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
+import me.an.mp.Monopoly;
+
+public class Menu implements MouseMotionListener
+{
+	private int x, y, width, height;
+	private BufferedImage image;
+	private Color color;
+	private List<MenuButton> buttons;
+	private boolean done = false;
+	
+	private int mouseX, mouseY;
+
+	public Menu(int x, int y, int width, int height, BufferedImage image)
+	{
+		this.buttons = new ArrayList<MenuButton>();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.image = image;
+	}
+
+	public Menu(int x, int y, int width, int height, Color color)
+	{
+		this.buttons = new ArrayList<MenuButton>();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.color = color;
+	}
+
+	public int getX()
+	{
+		return x;
+	}
+
+	public int getY()
+	{
+		return y;
+	}
+
+	public int getWidth()
+	{
+		return width;
+	}
+
+	public int getHeight()
+	{
+		return height;
+	}
+
+	public BufferedImage getImage()
+	{
+		return image;
+	}
+
+	public Color getColor()
+	{
+		return color;
+	}
+
+	public void addButton(MenuButton button)
+	{
+		buttons.add(button);
+	}
+
+	public boolean isDone()
+	{
+		return done;
+	}
+
+	public void setDone(boolean done)
+	{
+		this.done = done;
+	}
+
+	public void update()
+	{
+
+	}
+
+	public void mouseDragged(MouseEvent e)
+	{
+
+	}
+
+	public void mouseMoved(MouseEvent e)
+	{
+		for (MenuButton button : buttons)
+		{
+			if (button.getRectangle().contains(e.getX(), e.getY()))
+				button.setMouseOver(true);
+			else
+				button.setMouseOver(false);
+		}
+	}
+
+	public void render(Graphics g)
+	{
+		if (image != null)
+			g.drawImage(image, x, y, Monopoly.Instance);
+		else
+		{
+			g.setColor(color);
+			g.fillRect(x, y, width, height);
+		}
+
+		for (MenuButton button : buttons)
+			button.render(g);
+	}
+}

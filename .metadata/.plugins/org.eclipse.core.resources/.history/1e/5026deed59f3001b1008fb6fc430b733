@@ -1,0 +1,63 @@
+package me.an.mp.menu.menus;
+
+import java.awt.Graphics;
+
+import me.an.mp.Monopoly;
+import me.an.mp.display.DesignManager;
+import me.an.mp.event.MonoEvent;
+import me.an.mp.event.MonoListener;
+import me.an.mp.event.events.CycleTurnEvent;
+import me.an.mp.menu.Menu;
+import me.an.mp.menu.MenuButton;
+
+public class GameMenu extends Menu implements MonoListener
+{
+	private MenuButton doneButton;
+
+	public GameMenu()
+	{
+		super(0, 0, Monopoly.WIDTH, Monopoly.HEIGHT);
+
+		doneButton = new MenuButton(DesignManager.createButton("Done"), -1.0, 0.6, true)
+		{
+			public void onClick()
+			{
+				setVisible(false);
+				Monopoly.Instance.startNextTurn();
+			}
+		};
+		doneButton.setVisible(false);
+		addButton(doneButton);
+	}
+
+	public void showDoneButton()
+	{
+		doneButton.setVisible(true);
+	}
+
+	public boolean locContainsButton(int x, int y)
+	{
+		for (MenuButton button : getButtons())
+		{
+			if (button.getRectangle().contains(x, y))
+				return true;
+		}
+		return false;
+	}
+
+	public void onUpdate()
+	{
+
+	}
+
+	public void onRender(Graphics g)
+	{
+
+	}
+
+	public void onEvent(MonoEvent event)
+	{
+		if(!(event instanceof CycleTurnEvent))
+			return;
+	}
+}

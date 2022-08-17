@@ -1,0 +1,90 @@
+package me.an.mp.menu;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
+
+import me.an.mp.Monopoly;
+import me.an.mp.util.UtilText;
+
+public abstract class MenuBar
+{
+	private int x, y, width, height;
+	private int time, maxTime;
+	private Color fillColor;
+	private String text;
+	private double percent;
+	private boolean autoUpdate = true, done = false;
+
+	public MenuBar(int x, int y, int width, int height, int time, Color fillColor, String text)
+	{
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.time = time * 60;
+		this.maxTime = time;
+		this.fillColor = fillColor;
+		this.text = text;
+	}
+
+	public MenuBar(int x, int y, int width, int height, int time, Color fillColor, String text, boolean autoUpdate)
+	{
+		this(x, y, width, height, time, fillColor, text);
+		this.autoUpdate = autoUpdate;
+	}
+	
+	public MenuBar(double xPercent, double yPercent, int width, int height, int time, Color fillColor, String text, boolean autoUpdate)
+	{
+		this(((int)Monopoly.WIDTH*xPercent), (int)Monopoly.HEIGHT*yPercent, width, height, time, fillColor, text);
+	}
+
+	public void setPercent(double percent)
+	{
+		this.percent = percent;
+	}
+
+	public boolean isDone()
+	{
+		return done;
+	}
+
+	public void update()
+	{
+		if (!autoUpdate)
+			return;
+
+		if (time == 0)
+		{
+			done = true;
+			onDone();
+			return;
+		}
+
+		time--;
+		percent = time / (maxTime * 60.0);
+	}
+
+	public void render(Graphics g)
+	{
+		g.setColor(fillColor);
+
+		int barWidth = (int) (width * percent);
+		g.fillRect(x, y, barWidth, height);
+
+		g.setColor(Color.BLACK);
+		g.drawRect(x, y, width, height);
+
+		g.setFont(g.getFont().deriveFont(48f).deriveFont(Font.BOLD));
+
+		Rectangle2D stringBounds = UtilText.getBounds(g, g.getFont(), text);
+		int centerX = x + (width / 2) - ((int) (stringBounds.getWidth() / 2));
+		int centerY = y + (height / 2) - ((int) (stringBounds.getHeight() / 2)) + height;
+
+		g.setColor(Color.WHITE);
+		UtilText.paintTextWithOutline(g, text, centerX, centerY);
+	}
+
+	public abstract void onDone();
+}
